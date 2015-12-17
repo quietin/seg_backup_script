@@ -54,7 +54,8 @@ class BlogBackup(object):
                 if os.path.isdir(self.save_path):
                     return
                 else:
-                    raise BlogSavePathError("'%s' is not dir!" % self.save_path)
+                    raise BlogSavePathError(
+                        "'%s' is not dir!" % self.save_path)
             else:
                 raise BlogSavePathError("'%s' not exists!" % self.save_path)
         else:
@@ -82,7 +83,8 @@ class BlogBackup(object):
 
             try_times += 1
             if try_times > 30:
-                raise PageHtmlChanged("%s login page structure may have changed!" % _domain)
+                raise PageHtmlChanged(
+                    "%s login page structure may have changed!" % _domain)
 
     def get_driver(self):
         if self.phantomjs_path:
@@ -116,7 +118,8 @@ class BlogBackup(object):
         yield self._q.join()
 
     def __filter_cookies(self):
-        self._cookies = {k['name']: k['value'] for k in self._cookies if k['domain'] == _domain}
+        self._cookies = {k['name']: k['value'] for k in self._cookies if
+                         k['domain'] == _domain}
 
     @gen.coroutine
     def _fetch_blog_list_page(self, page_link):
@@ -179,12 +182,15 @@ def main():
 
 def usage():
     print '''
-    用法：python blogbackup.py -u [USERNAME] -p [PASSWORD] --phantomjs_path [phantomjs locate path]
-    -h --help 帮助
-    -u --username [USERNAME] 用户名
-    -p --passwd [PASSWORD] 密码
-    -s --save_path [save path] 博文保存的文件夹路径, 默认为本文件所在路径下的seg_blog_backup文件夹
-    --phantomjs_path  [phantomjs locate path] phantomjs所在路径, 如果其在PATH下可以找到则不必填
+用法：python blogbackup.py -u [USERNAME] -p [PASSWORD] --phantomjs_path \
+[phantomjs locate path]
+-h --help 帮助
+-u --username [USERNAME] 用户名
+-p --passwd [PASSWORD] 密码
+-s --save_path [save path] 博文保存的文件夹路径, 默认为本文件所在路径下的\
+seg_blog_backup文件夹
+--phantomjs_path  [phantomjs locate path] phantomjs所在路径, 如果其在PATH下可以\
+找到则不必填
     '''
 
 

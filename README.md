@@ -5,12 +5,17 @@ phantomjs模拟登录，tornado的coroutine做并发.
 
 
 # Usage：
-```bash
-python worker.py -u username -p passwd
-```
-这是第一版，还需要完善，自己使用请改一下`save_path`，也就是保存博文内容的目录，默认以**.md**后缀保存
-
 查看用法：
 ```bash
 python worker.py -h
 ```
+
+文章默认保存在`worker.py`所在文件夹下的seg_blog_backup文件夹中，以**.md**后缀保存
+```bash
+python worker.py -u username -p passwd
+```
+  
+非必选参数
+- -s 保存文章的文件夹
+- --phantomjs_path phantomjs的路径
+

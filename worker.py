@@ -2,9 +2,11 @@
 import requests
 import time
 import sys
+import os
 import getopt
-from selenium import webdriver
 from contextlib import contextmanager
+from selenium import webdriver
+from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.expected_conditions import staleness_of
 from pyquery import PyQuery as pq
@@ -20,17 +22,43 @@ blog_path = '/blog/quietin'
 edit_suffix = '/edit'
 
 
+class PageHtmlChanged(Exception):
+    pass
+
+
+class BlogSavePathError(Exception):
+    pass
+
+
+class PhantomjsPathError(Exception):
+    pass
+
+
 @contextmanager
 def wait_for_page_load(driver, element, timeout=30):
     yield WebDriverWait(driver, timeout).until(staleness_of(element))
 
 
-class PageStructChange(Exception):
-    pass
-
-
 class BlogBackup(object):
-    save_path = "/Users/quietin/blog_backup/"
+    _default_dir_name = 'seg_blog_backup'
+
+    def generate_save_dir(self):
+        cur_dir = os.path.dirname(__file__)
+        self.save_path = os.path.join(cur_dir, self._default_dir_name)
+        if not os.path.isdir(self.save_path):
+            os.mkdir(self.save_path)
+
+    def parse_save_path(self):
+        if self.save_path:
+            if os.path.exists(self.save_path):
+                if os.path.isdir(self.save_path):
+                    return
+                else:
+                    raise BlogSavePathError("'%s' is not dir!" % self.save_path)
+            else:
+                raise BlogSavePathError("'%s' not exists!" % self.save_path)
+        else:
+            self.generate_save_dir()
 
     def get_user_cookies(self):
         """ get cookies by phantomjs """
@@ -54,19 +82,25 @@ class BlogBackup(object):
 
             try_times += 1
             if try_times > 30:
-                raise PageStructChange("%s login page structure may have changed!" % _domain)
+                raise PageHtmlChanged("%s login page structure may have changed!" % _domain)
 
     def get_driver(self):
         if self.phantomjs_path:
-            return webdriver.PhantomJS(self.phantomjs_path)
+            try:
+                return webdriver.PhantomJS(self.phantomjs_path)
+            except WebDriverException:
+                raise PhantomjsPathError("Phantomjs locate path invalid!")
         else:
             return webdriver.PhantomJS()
 
     def __init__(self, **conf):
         self.username = conf['username']
         self.passwd = conf['passwd']
-        self.phantomjs_path = conf.pop('phantomjs_path', None)
+        self.phantomjs_path = conf.get('phantomjs_path')
+        self.save_path = conf.get('save_path')
         self._q = Queue()
+
+        self.parse_save_path()
         self.driver = self.get_driver()
         self._cookies = self.get_user_cookies()
 
@@ -107,8 +141,9 @@ class BlogBackup(object):
                 d = pq(ret.text)
                 title = d("#myTitle").val()
                 content = d("#myEditor").text()
-                file_name = self.save_path + title + '.md'
-                with open(file_name, 'w') as f:
+                file_name = title + '.md'
+                real_file_name = os.path.join(self.save_path, file_name)
+                with open(real_file_name, 'w') as f:
                     f.writelines(content.encode('utf8'))
             except gen.TimeoutError:
                 raise gen.Return()
@@ -121,15 +156,18 @@ def main():
     config = {}
     opts, args = getopt.getopt(
         sys.argv[1:],
-        'hu:p:',
+        's:h:u:p:',
         ['phantomjs_path=', 'save_path=', 'username=', 'passwd='])
+
     for opt, value in opts:
         if opt in ['-u', '--username']:
             config['username'] = value
         elif opt in ['-p', '--passwd']:
             config['passwd'] = value
-        elif opt == 'phantomjs_path':
-            config[opt] = value
+        elif opt == '--phantomjs_path':
+            config['phantomjs_path'] = value
+        elif opt in ['-s', '--save_path']:
+            config['save_path'] = value
         elif opt in ['-h', '--help']:
             usage()
             sys.exit()
@@ -145,6 +183,7 @@ def usage():
     -h --help 帮助
     -u --username [USERNAME] 用户名
     -p --passwd [PASSWORD] 密码
+    -s --save_path [save path] 博文保存的文件夹路径, 默认为本文件所在路径下的seg_blog_backup文件夹
     --phantomjs_path  [phantomjs locate path] phantomjs所在路径, 如果其在PATH下可以找到则不必填
     '''
 

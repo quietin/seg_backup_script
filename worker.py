@@ -156,7 +156,7 @@ def main():
     config = {}
     opts, args = getopt.getopt(
         sys.argv[1:],
-        's:h:u:p:',
+        'hs:u:p:',
         ['phantomjs_path=', 'save_path=', 'username=', 'passwd='])
 
     for opt, value in opts:

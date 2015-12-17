@@ -1,9 +1,10 @@
 # segmentfault_blog_backup
 
 用tornado和phantomjs写的[segmentfault](http://segmentfault.com)网站的博客备份脚本
+phantomjs模拟登录，tornado的coroutine做并发
 
 
-用法：
+# Usage：
 ```bash
 python worker.py -u username -p passwd
 ```

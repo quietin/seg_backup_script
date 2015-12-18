@@ -4,9 +4,9 @@ import time
 import sys
 import os
 import getopt
-from contextlib import contextmanager
 from selenium import webdriver
-from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import (
+    WebDriverException, NoSuchElementException, TimeoutException)
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.expected_conditions import staleness_of
 from pyquery import PyQuery as pq
@@ -34,9 +34,8 @@ class PhantomjsPathError(Exception):
     pass
 
 
-@contextmanager
-def wait_for_page_load(driver, element, timeout=30):
-    yield WebDriverWait(driver, timeout).until(staleness_of(element))
+def has_page_load(driver):
+    return driver.execute_script("return document.readyState") == 'complete'
 
 
 class BlogBackup(object):
@@ -50,50 +49,55 @@ class BlogBackup(object):
 
     def parse_save_path(self):
         if self.save_path:
-            if os.path.exists(self.save_path):
-                if os.path.isdir(self.save_path):
-                    return
-                else:
-                    raise BlogSavePathError(
-                        "'%s' is not dir!" % self.save_path)
+            if os.path.exists(self.save_path) and \
+                    os.path.isdir(self.save_path):
+                return
             else:
-                raise BlogSavePathError("'%s' not exists!" % self.save_path)
+                raise BlogSavePathError(
+                    "'%s' not exists or is not dir!" % self.save_path)
         else:
             self.generate_save_dir()
 
     def get_user_cookies(self):
-        """ get cookies by phantomjs """
-        # FIXME: judge wrong username passwd group
         url = target_url + login_page_path
         self.driver.get(url)
-        user_input = self.driver.find_element_by_name('mail')
-        passwd_input = self.driver.find_element_by_name('password')
+        try:
+            user_input = self.driver.find_element_by_name('mail')
+            passwd_input = self.driver.find_element_by_name('password')
+            submit_btn = self.driver.find_element_by_class_name('pr20')
+        except NoSuchElementException:
+            raise PageHtmlChanged(
+                "%s login page structure have changed!" % _domain)
+
         user_input.send_keys(self.username)
         passwd_input.send_keys(self.passwd)
-        submit_btn = self.driver.find_element_by_class_name('pr20')
-        old_cookies = self.driver.get_cookies()
         submit_btn.click()
-        wait_for_page_load(self.driver, submit_btn)
+        try:
+            WebDriverWait(self.driver, 3).until(staleness_of(submit_btn))
+        except TimeoutException:
+            raise Exception("Wrong username or password!")
+
+        WebDriverWait(self.driver, timeout=10).until(has_page_load)
         try_times = 0
         while True:
             time.sleep(1)
-            cookies = self.driver.get_cookies()
-            if cookies != old_cookies:
-                return cookies
+            if url != self.driver.current_url:
+                return self.driver.get_cookies()
 
             try_times += 1
-            if try_times > 30:
-                raise PageHtmlChanged(
-                    "%s login page structure may have changed!" % _domain)
+            if try_times > 10:
+                raise Exception("Getting cookie info failed!")
 
     def get_driver(self):
         if self.phantomjs_path:
             try:
-                return webdriver.PhantomJS(self.phantomjs_path)
+                return webdriver.PhantomJS(
+                    executable_path=self.phantomjs_path,
+                    service_log_path=os.path.devnull)
             except WebDriverException:
                 raise PhantomjsPathError("Phantomjs locate path invalid!")
         else:
-            return webdriver.PhantomJS()
+            return webdriver.PhantomJS(service_log_path=os.path.devnull)
 
     def __init__(self, **conf):
         self.username = conf['username']

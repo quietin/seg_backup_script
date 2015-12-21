@@ -41,13 +41,13 @@ def has_page_load(driver):
 class BlogBackup(object):
     _default_dir_name = 'seg_blog_backup'
 
-    def generate_save_dir(self):
+    def _generate_save_dir(self):
         cur_dir = os.path.dirname(__file__)
         self.save_path = os.path.join(cur_dir, self._default_dir_name)
         if not os.path.isdir(self.save_path):
             os.mkdir(self.save_path)
 
-    def parse_save_path(self):
+    def _parse_save_path(self):
         if self.save_path:
             if os.path.exists(self.save_path) and \
                     os.path.isdir(self.save_path):
@@ -56,9 +56,9 @@ class BlogBackup(object):
                 raise BlogSavePathError(
                     "'%s' not exists or is not dir!" % self.save_path)
         else:
-            self.generate_save_dir()
+            self._generate_save_dir()
 
-    def get_user_cookies(self):
+    def _get_user_cookies(self):
         url = target_url + login_page_path
         self.driver.get(url)
         try:
@@ -88,7 +88,7 @@ class BlogBackup(object):
             if try_times > 10:
                 raise Exception("Getting cookie info failed!")
 
-    def get_driver(self):
+    def _get_driver(self):
         if self.phantomjs_path:
             try:
                 return webdriver.PhantomJS(
@@ -106,9 +106,9 @@ class BlogBackup(object):
         self.save_path = conf.get('save_path')
         self._q = Queue()
 
-        self.parse_save_path()
-        self.driver = self.get_driver()
-        self._cookies = self.get_user_cookies()
+        self._parse_save_path()
+        self.driver = self._get_driver()
+        self._cookies = self._get_user_cookies()
 
     @gen.coroutine
     def run(self):

@@ -49,7 +49,7 @@ class BlogBackup(object):
             self._generate_save_dir()
 
     @staticmethod
-    def get_req_from_html(content):
+    def get_token_from_html(content):
         overall_pat = re.compile(r'SF.token =.*?,\s+_\w+ = [\d,\[\]]+;',
                                  re.DOTALL)
         overall_res = overall_pat.search(content)
@@ -75,7 +75,7 @@ class BlogBackup(object):
         s.headers.update(headers)
         rep = s.get(target_url)
         post_url = "%s%s?_=%s" % (target_url, login_api_path,
-                                  self.get_req_from_html(rep.text))
+                                  self.get_token_from_html(rep.text))
         data = {
             'mail': self.username,
             'password': self.passwd,

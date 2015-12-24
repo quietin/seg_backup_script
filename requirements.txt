@@ -1,0 +1,4 @@
+pyquery
+requests
+selenium
+tornado

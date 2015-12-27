@@ -1,4 +1,5 @@
-# segmentfault_blog_backup
+# seg_backup_script
+**博文备份程序**  
 
 两个版本，`backup_simple.py`只用`requests`实现登录，`backup_with_phantomjs`则在此之上还用了`phantomjs`，后者更适于扩展后用于动态生成内容的网站(微博等)
 

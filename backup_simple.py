@@ -64,7 +64,7 @@ class BlogBackup(object):
 
             if filter_list:
                 for m, n in filter_list:
-                    ret = ret[0:int(m)] + ret[int(n):]
+                    ret = ret[:int(m)] + ret[int(n):]
             if len(ret) == 32:
                 return ret
 

@@ -13,7 +13,7 @@ phantomjs模拟登录，tornado的coroutine做并发.
 python worker.py -h
 ```
 
-文章默认保存在`worker.py`所在文件夹下的seg_blog_backup文件夹中，以**.md**后缀保存
+文章默认保存在项目文件夹下的seg_blog_backup文件夹中，以**.md**后缀保存
 ```bash
 python worker.py -u username -p passwd
 ```

@@ -1,11 +1,10 @@
 # seg_backup_script
 **Blog Backup Program**  
 
-A blog backup script for the [segmentfault](http://segmentfault.com) website, written with Tornado and PhantomJS.  
+A blog backup script for the [SegmentFault](http://segmentfault.com) website, written in Tornado and PhantomJS.  
 PhantomJS simulates login, and Tornado's coroutines are used for concurrency.
 
-There are two version codes: `backup_simple.py` uses only `requests` for login, while `backup_with_phantomjs` additionally utilizes `phantomjs`. After further extension, the latter is more suitable for websites with dynamically generated content (such as Weibo).
-
+There are two versions of the code: `backup_simple.py` uses only `requests` for login, while `backup_with_phantomjs` additionally utilizes PhantomJS. The latter is more suitable for websites with dynamically generated content (such as Weibo) after further extension.
 
 
 # Usage:

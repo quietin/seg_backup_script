@@ -1,3 +1,5 @@
+[中文版](https://github.com/quietin/seg_backup_script/blob/master/README_CN.md)
+
 # seg_backup_script
 **Blog Backup Program**  
 
